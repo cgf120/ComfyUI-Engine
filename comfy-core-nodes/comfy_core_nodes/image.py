@@ -4,6 +4,8 @@ Image processing nodes for ComfyUI
 
 import os
 import json
+import hashlib
+import random
 import numpy as np
 import torch
 from PIL import Image, ImageOps, ImageSequence
@@ -12,8 +14,14 @@ from PIL.PngImagePlugin import PngInfo
 try:
     import folder_paths
     import comfy.utils
+    from comfy.cli_args import args
 except ImportError:
     print("Warning: ComfyUI image modules not found. Creating stubs.")
+    
+    # Create a mock args object
+    class MockArgs:
+        disable_metadata = False
+    args = MockArgs()
     
     class MockFolderPaths:
         @staticmethod
