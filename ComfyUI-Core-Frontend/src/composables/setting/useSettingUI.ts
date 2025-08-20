@@ -13,8 +13,6 @@ import { isElectron } from '@/utils/envUtil'
 import { normalizeI18nKey } from '@/utils/formatUtil'
 import { buildTree } from '@/utils/treeUtil'
 
-import { useCurrentUser } from '../auth/useCurrentUser'
-
 interface SettingPanelItem {
   node: SettingTreeNode
   component: Component
@@ -30,7 +28,7 @@ export function useSettingUI(
     | 'credits'
 ) {
   const { t } = useI18n()
-  const { isLoggedIn } = useCurrentUser()
+  const isLoggedIn = false
   const settingStore = useSettingStore()
   const activeCategory = ref<SettingTreeNode | null>(null)
 
@@ -72,28 +70,6 @@ export function useSettingUI(
     )
   }
 
-  const creditsPanel: SettingPanelItem = {
-    node: {
-      key: 'credits',
-      label: 'Credits',
-      children: []
-    },
-    component: defineAsyncComponent(
-      () => import('@/components/dialog/content/setting/CreditsPanel.vue')
-    )
-  }
-
-  const userPanel: SettingPanelItem = {
-    node: {
-      key: 'user',
-      label: 'User',
-      children: []
-    },
-    component: defineAsyncComponent(
-      () => import('@/components/dialog/content/setting/UserPanel.vue')
-    )
-  }
-
   const keybindingPanel: SettingPanelItem = {
     node: {
       key: 'keybinding',
@@ -130,8 +106,6 @@ export function useSettingUI(
   const panels = computed<SettingPanelItem[]>(() =>
     [
       aboutPanel,
-      creditsPanel,
-      userPanel,
       keybindingPanel,
       extensionPanel,
       ...(isElectron() ? [serverConfigPanel] : [])
@@ -164,10 +138,7 @@ export function useSettingUI(
     {
       key: 'account',
       label: 'Account',
-      children: [
-        userPanel.node,
-        ...(isLoggedIn.value ? [creditsPanel.node] : [])
-      ].map(translateCategory)
+      children: [].map(translateCategory)
     },
     // Normal settings stored in the settingStore
     {

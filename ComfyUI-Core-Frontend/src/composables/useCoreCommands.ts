@@ -1,4 +1,3 @@
-import { useFirebaseAuthActions } from '@/composables/auth/useFirebaseAuthActions'
 import { useSelectedLiteGraphItems } from '@/composables/canvas/useSelectedLiteGraphItems'
 import { useModelSelectorDialog } from '@/composables/useModelSelectorDialog'
 import {
@@ -23,7 +22,7 @@ import { useWorkflowService } from '@/services/workflowService'
 import type { ComfyCommand } from '@/stores/commandStore'
 import { useExecutionStore } from '@/stores/executionStore'
 import { useCanvasStore, useTitleEditorStore } from '@/stores/graphStore'
-import { useHelpCenterStore } from '@/stores/helpCenterStore'
+// import { useHelpCenterStore } from '@/stores/helpCenterStore' // 已移除帮助中心
 import { useNodeOutputStore } from '@/stores/imagePreviewStore'
 import { useQueueSettingsStore, useQueueStore } from '@/stores/queueStore'
 import { useSettingStore } from '@/stores/settingStore'
@@ -47,7 +46,6 @@ export function useCoreCommands(): ComfyCommand[] {
   const workflowStore = useWorkflowStore()
   const dialogService = useDialogService()
   const colorPaletteStore = useColorPaletteStore()
-  const firebaseAuthActions = useFirebaseAuthActions()
   const toastStore = useToastStore()
   const canvasStore = useCanvasStore()
   const executionStore = useExecutionStore()
@@ -744,7 +742,7 @@ export function useCoreCommands(): ComfyCommand[] {
       label: 'Sign Out',
       versionAdded: '1.18.1',
       function: async () => {
-        await firebaseAuthActions.logout()
+        // Sign out functionality removed
       }
     },
     {
@@ -837,15 +835,16 @@ export function useCoreCommands(): ComfyCommand[] {
         dialogService.showManagerDialog()
       }
     },
-    {
-      id: 'Comfy.ToggleHelpCenter',
-      icon: 'pi pi-question-circle',
-      label: 'Help Center',
-      function: () => {
-        useHelpCenterStore().toggle()
-      },
-      active: () => useHelpCenterStore().isVisible
-    },
+    // 移除帮助中心命令
+    // {
+    //   id: 'Comfy.ToggleHelpCenter',
+    //   icon: 'pi pi-question-circle',
+    //   label: 'Help Center',
+    //   function: () => {
+    //     useHelpCenterStore().toggle()
+    //   },
+    //   active: () => useHelpCenterStore().isVisible
+    // },
     {
       id: 'Comfy.ToggleCanvasInfo',
       icon: 'pi pi-info-circle',

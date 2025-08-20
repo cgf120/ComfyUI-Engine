@@ -1,6 +1,6 @@
 import {
-  NavigationGuardNext,
-  RouteLocationNormalized,
+  // NavigationGuardNext,
+  // RouteLocationNormalized,
   createRouter,
   createWebHashHistory,
   createWebHistory
@@ -8,23 +8,14 @@ import {
 
 import LayoutDefault from '@/views/layouts/LayoutDefault.vue'
 
-import { useUserStore } from './stores/userStore'
+// 移除用户认证相关导入
+// import { useUserStore } from './stores/userStore'
 import { isElectron } from './utils/envUtil'
 
 const isFileProtocol = window.location.protocol === 'file:'
 const basePath = isElectron() ? '/' : window.location.pathname
 
-const guardElectronAccess = (
-  _to: RouteLocationNormalized,
-  _from: RouteLocationNormalized,
-  next: NavigationGuardNext
-) => {
-  if (isElectron()) {
-    next()
-  } else {
-    next('/')
-  }
-}
+// 移除guardElectronAccess - 不再需要桌面应用路由
 
 const router = createRouter({
   history: isFileProtocol
@@ -42,81 +33,12 @@ const router = createRouter({
           path: '',
           name: 'GraphView',
           component: () => import('@/views/GraphView.vue'),
-          beforeEnter: async (_to, _from, next) => {
-            const userStore = useUserStore()
-            await userStore.initialize()
-            if (userStore.needsLogin) {
-              next('/user-select')
-            } else {
-              next()
-            }
+          // 移除用户认证检查，直接进入GraphView
+          beforeEnter: (_to, _from, next) => {
+            next()
           }
-        },
-        {
-          path: 'user-select',
-          name: 'UserSelectView',
-          component: () => import('@/views/UserSelectView.vue')
-        },
-        {
-          path: 'server-start',
-          name: 'ServerStartView',
-          component: () => import('@/views/ServerStartView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: 'install',
-          name: 'InstallView',
-          component: () => import('@/views/InstallView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: 'welcome',
-          name: 'WelcomeView',
-          component: () => import('@/views/WelcomeView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: 'not-supported',
-          name: 'NotSupportedView',
-          component: () => import('@/views/NotSupportedView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: 'download-git',
-          name: 'DownloadGitView',
-          component: () => import('@/views/DownloadGitView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: 'manual-configuration',
-          name: 'ManualConfigurationView',
-          component: () => import('@/views/ManualConfigurationView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: '/metrics-consent',
-          name: 'MetricsConsentView',
-          component: () => import('@/views/MetricsConsentView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: 'desktop-start',
-          name: 'DesktopStartView',
-          component: () => import('@/views/DesktopStartView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: 'maintenance',
-          name: 'MaintenanceView',
-          component: () => import('@/views/MaintenanceView.vue'),
-          beforeEnter: guardElectronAccess
-        },
-        {
-          path: 'desktop-update',
-          name: 'DesktopUpdateView',
-          component: () => import('@/views/DesktopUpdateView.vue'),
-          beforeEnter: guardElectronAccess
         }
+        // 移除所有桌面应用和认证相关路由
       ]
     }
   ],

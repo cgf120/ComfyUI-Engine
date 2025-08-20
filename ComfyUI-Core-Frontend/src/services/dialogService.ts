@@ -10,17 +10,13 @@ import ManagerProgressDialogContent from '@/components/dialog/content/ManagerPro
 import MissingModelsWarning from '@/components/dialog/content/MissingModelsWarning.vue'
 import PromptDialogContent from '@/components/dialog/content/PromptDialogContent.vue'
 import SettingDialogContent from '@/components/dialog/content/SettingDialogContent.vue'
-import SignInContent from '@/components/dialog/content/SignInContent.vue'
-import TopUpCreditsDialogContent from '@/components/dialog/content/TopUpCreditsDialogContent.vue'
-import UpdatePasswordContent from '@/components/dialog/content/UpdatePasswordContent.vue'
 import ManagerDialogContent from '@/components/dialog/content/manager/ManagerDialogContent.vue'
 import ManagerHeader from '@/components/dialog/content/manager/ManagerHeader.vue'
 import ManagerProgressFooter from '@/components/dialog/footer/ManagerProgressFooter.vue'
 import ComfyOrgHeader from '@/components/dialog/header/ComfyOrgHeader.vue'
 import ManagerProgressHeader from '@/components/dialog/header/ManagerProgressHeader.vue'
 import SettingDialogHeader from '@/components/dialog/header/SettingDialogHeader.vue'
-import TemplateWorkflowsContent from '@/components/templates/TemplateWorkflowsContent.vue'
-import TemplateWorkflowsDialogHeader from '@/components/templates/TemplateWorkflowsDialogHeader.vue'
+
 import { t } from '@/i18n'
 import type { ExecutionErrorWsMessage } from '@/schemas/apiSchema'
 import {

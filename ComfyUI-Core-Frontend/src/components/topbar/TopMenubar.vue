@@ -20,7 +20,6 @@
         class="comfyui-menu-right flex-shrink-1 overflow-auto"
       />
       <Actionbar />
-      <CurrentUserButton class="flex-shrink-0" />
     </div>
 
     <!-- Virtual top menu for native window (drag handle) -->
@@ -37,7 +36,7 @@ import { computed, onMounted, provide, ref } from 'vue'
 
 import Actionbar from '@/components/actionbar/ComfyActionbar.vue'
 import CommandMenubar from '@/components/topbar/CommandMenubar.vue'
-import CurrentUserButton from '@/components/topbar/CurrentUserButton.vue'
+
 import WorkflowTabs from '@/components/topbar/WorkflowTabs.vue'
 import { app } from '@/scripts/app'
 import { useSettingStore } from '@/stores/settingStore'

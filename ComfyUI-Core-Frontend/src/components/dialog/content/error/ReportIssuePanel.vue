@@ -167,8 +167,6 @@
 <script setup lang="ts">
 import { Form, FormField, type FormSubmitEvent } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
-import type { CaptureContext, User } from '@sentry/core'
-import { captureMessage } from '@sentry/core'
 import _ from 'es-toolkit/compat'
 import { cloneDeep } from 'es-toolkit/compat'
 import Button from 'primevue/button'
@@ -188,7 +186,6 @@ import {
 } from '@/schemas/issueReportSchema'
 import { api } from '@/scripts/api'
 import { app } from '@/scripts/app'
-import { useFirebaseAuthStore } from '@/stores/firebaseAuthStore'
 import type {
   DefaultField,
   IssueReportPanelProps,

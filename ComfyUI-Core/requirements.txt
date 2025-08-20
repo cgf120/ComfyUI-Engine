@@ -1,0 +1,23 @@
+# ComfyUI-Core minimal requirements
+# Core runtime dependencies (minimal torch for execution engine)
+
+# Web server and async support
+aiohttp
+aiofiles
+websockets
+
+# Basic utilities
+pyyaml
+psutil
+
+# Minimal torch for execution engine and latent preview
+# (No AI models, just tensor operations)
+torch
+numpy
+Pillow
+
+# Development and testing
+pytest
+
+# Note: AI models, torchvision, transformers etc. are in node packages
+# ComfyUI-Core only includes minimal torch for runtime operations

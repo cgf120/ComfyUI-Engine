@@ -1,0 +1,8 @@
+/ComfyUI-Core/custom_nodes/
+/ComfyUI_frontend/
+/ComfyUI/
+.kiro
+.idea
+.vscode
+/ComfyUI-Core-Frontend/dist/
+/ComfyUI-Core-Frontend/node_modules/

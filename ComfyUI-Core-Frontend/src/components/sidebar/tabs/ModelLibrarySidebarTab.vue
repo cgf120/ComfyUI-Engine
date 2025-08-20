@@ -28,8 +28,6 @@
       />
     </template>
     <template #body>
-      <ElectronDownloadItems v-if="isElectron()" />
-
       <TreeExplorer
         v-model:expandedKeys="expandedKeys"
         class="model-lib-tree-explorer"
@@ -51,7 +49,6 @@ import { computed, nextTick, onMounted, ref, toRef, watch } from 'vue'
 import SearchBox from '@/components/common/SearchBox.vue'
 import TreeExplorer from '@/components/common/TreeExplorer.vue'
 import SidebarTabTemplate from '@/components/sidebar/tabs/SidebarTabTemplate.vue'
-import ElectronDownloadItems from '@/components/sidebar/tabs/modelLibrary/ElectronDownloadItems.vue'
 import ModelTreeLeaf from '@/components/sidebar/tabs/modelLibrary/ModelTreeLeaf.vue'
 import { useTreeExpansion } from '@/composables/useTreeExpansion'
 import { useLitegraphService } from '@/services/litegraphService'

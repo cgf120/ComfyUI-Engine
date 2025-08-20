@@ -1,16 +1,14 @@
 import type { InjectionKey, Ref } from 'vue'
 
 import type { ComfyWorkflowJSON } from '@/schemas/comfyWorkflowSchema'
-import type { AlgoliaNodePack } from '@/types/algoliaTypes'
 import type { components } from '@/types/comfyRegistryTypes'
-import type { SearchMode } from '@/types/searchServiceTypes'
 
 type WorkflowNodeProperties = ComfyWorkflowJSON['nodes'][0]['properties']
 
 export type RegistryPack = components['schemas']['Node']
-export type MergedNodePack = RegistryPack & AlgoliaNodePack
+export type MergedNodePack = RegistryPack
 export const isMergedNodePack = (
-  nodePack: RegistryPack | AlgoliaNodePack
+  nodePack: RegistryPack
 ): nodePack is MergedNodePack => 'comfy_nodes' in nodePack
 
 export type PackField = keyof RegistryPack | null
@@ -239,6 +237,6 @@ export interface UpdateAllPacksParams {
 export interface ManagerState {
   selectedTabId: ManagerTab
   searchQuery: string
-  searchMode: SearchMode
+  searchMode: string
   sortField: string
 }

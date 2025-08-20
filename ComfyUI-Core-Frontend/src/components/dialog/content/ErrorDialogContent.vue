@@ -81,7 +81,6 @@ import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 import { api } from '@/scripts/api'
 import { app } from '@/scripts/app'
 import { useCommandStore } from '@/stores/commandStore'
-import { useFirebaseAuthStore } from '@/stores/firebaseAuthStore'
 import { useSystemStatsStore } from '@/stores/systemStatsStore'
 import type { ReportField } from '@/types/issueReportTypes'
 import {

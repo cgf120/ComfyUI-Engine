@@ -42,12 +42,10 @@ import { useExtensionService } from '@/services/extensionService'
 import { useLitegraphService } from '@/services/litegraphService'
 import { useSubgraphService } from '@/services/subgraphService'
 import { useWorkflowService } from '@/services/workflowService'
-import { useApiKeyAuthStore } from '@/stores/apiKeyAuthStore'
 import { useCommandStore } from '@/stores/commandStore'
 import { useDomWidgetStore } from '@/stores/domWidgetStore'
 import { useExecutionStore } from '@/stores/executionStore'
 import { useExtensionStore } from '@/stores/extensionStore'
-import { useFirebaseAuthStore } from '@/stores/firebaseAuthStore'
 import { useNodeOutputStore } from '@/stores/imagePreviewStore'
 import { KeyComboImpl, useKeybindingStore } from '@/stores/keybindingStore'
 import { useModelStore } from '@/stores/modelStore'
@@ -1303,9 +1301,8 @@ export class ComfyApp {
     const executionStore = useExecutionStore()
     executionStore.lastNodeErrors = null
 
-    let comfyOrgAuthToken =
-      (await useFirebaseAuthStore().getIdToken()) ?? undefined
-    let comfyOrgApiKey = useApiKeyAuthStore().getApiKey()
+    let comfyOrgAuthToken = undefined
+    let comfyOrgApiKey = undefined
 
     try {
       while (this.#queueItems.length) {

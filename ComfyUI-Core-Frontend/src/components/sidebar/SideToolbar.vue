@@ -39,14 +39,10 @@ import SidebarBottomPanelToggleButton from '@/components/sidebar/SidebarBottomPa
 import SidebarShortcutsToggleButton from '@/components/sidebar/SidebarShortcutsToggleButton.vue'
 import { useKeybindingStore } from '@/stores/keybindingStore'
 import { useSettingStore } from '@/stores/settingStore'
-import { useUserStore } from '@/stores/userStore'
 import { useWorkspaceStore } from '@/stores/workspaceStore'
 import type { SidebarTabExtension } from '@/types/extensionTypes'
 
-import SidebarHelpCenterIcon from './SidebarHelpCenterIcon.vue'
 import SidebarIcon from './SidebarIcon.vue'
-import SidebarLogoutIcon from './SidebarLogoutIcon.vue'
-import SidebarTemplatesButton from './SidebarTemplatesButton.vue'
 
 const workspaceStore = useWorkspaceStore()
 const settingStore = useSettingStore()

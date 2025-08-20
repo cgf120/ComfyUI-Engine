@@ -1,9 +1,9 @@
 import { defineAsyncComponent, markRaw } from 'vue'
 
 import ModelLibrarySidebarTab from '@/components/sidebar/tabs/ModelLibrarySidebarTab.vue'
-import { useElectronDownloadStore } from '@/stores/electronDownloadStore'
+// import { useElectronDownloadStore } from '@/stores/electronDownloadStore' // 已移除
 import type { SidebarTabExtension } from '@/types/extensionTypes'
-import { isElectron } from '@/utils/envUtil'
+// import { isElectron } from '@/utils/envUtil' // 已移除electron功能
 
 const AiModelIcon = markRaw(
   defineAsyncComponent(() => import('virtual:icons/comfy/ai-model'))
@@ -19,12 +19,13 @@ export const useModelLibrarySidebarTab = (): SidebarTabExtension => {
     component: markRaw(ModelLibrarySidebarTab),
     type: 'vue',
     iconBadge: () => {
-      if (isElectron()) {
-        const electronDownloadStore = useElectronDownloadStore()
-        if (electronDownloadStore.inProgressDownloads.length > 0) {
-          return electronDownloadStore.inProgressDownloads.length.toString()
-        }
-      }
+      // 移除electron下载功能
+      // if (isElectron()) {
+      //   const electronDownloadStore = useElectronDownloadStore()
+      //   if (electronDownloadStore.inProgressDownloads.length > 0) {
+      //     return electronDownloadStore.inProgressDownloads.length.toString()
+      //   }
+      // }
 
       return null
     }

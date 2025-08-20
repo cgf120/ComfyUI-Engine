@@ -6,9 +6,10 @@ import { useColorPaletteService } from '@/services/colorPaletteService'
 import { useDialogService } from '@/services/dialogService'
 import type { SidebarTabExtension, ToastManager } from '@/types/extensionTypes'
 
-import { useApiKeyAuthStore } from './apiKeyAuthStore'
+// 移除认证相关导入
+// import { useApiKeyAuthStore } from './apiKeyAuthStore'
 import { useCommandStore } from './commandStore'
-import { useFirebaseAuthStore } from './firebaseAuthStore'
+// import { useFirebaseAuthStore } from './firebaseAuthStore'
 import { useQueueSettingsStore } from './queueStore'
 import { useSettingStore } from './settingStore'
 import { useToastStore } from './toastStore'
@@ -45,8 +46,14 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const dialog = useDialogService()
   const bottomPanel = useBottomPanelStore()
 
-  const authStore = useFirebaseAuthStore()
-  const apiKeyStore = useApiKeyAuthStore()
+  // 认证相关的兼容性垫片
+  const authStore = {
+    currentUser: null,
+    isAuthenticated: false
+  }
+  const apiKeyStore = {
+    isAuthenticated: false
+  }
 
   const firebaseUser = computed(() => authStore.currentUser)
   const isApiKeyLogin = computed(() => apiKeyStore.isAuthenticated)

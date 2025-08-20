@@ -25,12 +25,7 @@
         content: { class: 'px-0' }
       }"
     >
-      <PackVersionSelectorPopover
-        :installed-version="installedVersion"
-        :node-pack="nodePack"
-        @cancel="closeVersionSelector"
-        @submit="closeVersionSelector"
-      />
+      <!-- Version selector removed -->
     </Popover>
   </div>
 </template>
@@ -39,7 +34,6 @@
 import Popover from 'primevue/popover'
 import { computed, ref, watch } from 'vue'
 
-import PackVersionSelectorPopover from '@/components/dialog/content/manager/PackVersionSelectorPopover.vue'
 import { usePackUpdateStatus } from '@/composables/nodePack/usePackUpdateStatus'
 import { useComfyManagerStore } from '@/stores/comfyManagerStore'
 import { SelectedVersion } from '@/types/comfyManagerTypes'
