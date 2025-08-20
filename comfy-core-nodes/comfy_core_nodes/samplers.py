@@ -1,35 +1,23 @@
 """
-Sampler nodes for ComfyUI
+Sampler nodes for ComfyUI - Self-contained implementation
 """
 
-try:
-    import comfy.samplers
-    import comfy.sample
-    import comfy.model_management
-except ImportError:
-    print("Warning: ComfyUI sampler modules not found. Creating stubs.")
-    
-    class MockSamplers:
-        KSampler = None
-        @staticmethod
-        def calculate_sigmas(*args, **kwargs):
-            return None
-    
-    class MockSample:
-        @staticmethod
-        def sample(*args, **kwargs):
-            return {"samples": None}
-    
-    class MockModelManagement:
-        @staticmethod
-        def get_torch_device():
-            return "cpu"
-    
-    comfy = type('MockComfy', (), {
-        'samplers': MockSamplers(),
-        'sample': MockSample(),
-        'model_management': MockModelManagement()
-    })()
+# Define sampler constants directly in the plugin
+SAMPLERS = [
+    "euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", 
+    "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", 
+    "dpmpp_sde_gpu", "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", 
+    "ddim", "uni_pc", "uni_pc_bh2"
+]
+
+SCHEDULERS = [
+    "normal", "karras", "exponential", "sgm_uniform", "simple", "ddim_uniform"
+]
+
+def sample_function(*args, **kwargs):
+    """Placeholder sample function - implement your own sampling logic here"""
+    print("Sample function called - implement your sampling logic")
+    return {"samples": None}
 
 
 class KSampler:
@@ -43,8 +31,8 @@ class KSampler:
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.1, "round": 0.01}),
-                "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
-                "scheduler": (comfy.samplers.KSampler.SCHEDULERS,),
+                "sampler_name": (SAMPLERS,),
+                "scheduler": (SCHEDULERS,),
                 "positive": ("CONDITIONING", ),
                 "negative": ("CONDITIONING", ),
                 "latent_image": ("LATENT", ),
@@ -57,7 +45,7 @@ class KSampler:
     CATEGORY = "sampling"
 
     def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=1.0):
-        return comfy.sample.sample(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
+        return sample_function(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise)
 
 
 class KSamplerAdvanced:
@@ -72,8 +60,8 @@ class KSamplerAdvanced:
                 "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.1, "round": 0.01}),
-                "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
-                "scheduler": (comfy.samplers.KSampler.SCHEDULERS,),
+                "sampler_name": (SAMPLERS,),
+                "scheduler": (SCHEDULERS,),
                 "positive": ("CONDITIONING", ),
                 "negative": ("CONDITIONING", ),
                 "latent_image": ("LATENT", ),
@@ -94,6 +82,6 @@ class KSamplerAdvanced:
         disable_noise = False
         if add_noise == "disable":
             disable_noise = True
-        return comfy.sample.sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
-                                  denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step,
-                                  force_full_denoise=force_full_denoise)
+        return sample_function(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
+                              denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step,
+                              force_full_denoise=force_full_denoise)

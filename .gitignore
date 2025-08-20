@@ -9,6 +9,10 @@ __pycache__/
 .vscode
 .kiro
 .DS_Store
+*/node_modules/
+*/custom_nodes/
+ComfyUI-Core/input/*
+ComfyUI-Core/output/*
 
 # Distribution / packaging
 .Python

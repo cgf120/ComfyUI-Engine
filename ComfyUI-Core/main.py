@@ -7,6 +7,9 @@ import logging
 import argparse
 import threading
 import time
+import itertools
+import shutil
+import importlib.util
 
 # Add the current directory to the Python path
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -14,21 +17,119 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 def apply_custom_paths():
     """Apply custom paths for models and other resources"""
     import folder_paths
-    # Initialize folder paths - folder_names_and_paths is already initialized in folder_paths.py
-    # No need to reassign it here as it's already properly set up
+    import utils.extra_config
+    import itertools
+    from comfy.cli_args import args
+    
+    # extra model paths
+    extra_model_paths_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "extra_model_paths.yaml")
+    if os.path.isfile(extra_model_paths_config_path):
+        utils.extra_config.load_extra_path_config(extra_model_paths_config_path)
+
+    if args.extra_model_paths_config:
+        for config_path in itertools.chain(*args.extra_model_paths_config):
+            utils.extra_config.load_extra_path_config(config_path)
+
+    # --output-directory, --input-directory, --user-directory
+    if args.output_directory:
+        output_dir = os.path.abspath(args.output_directory)
+        logging.info(f"Setting output directory to: {output_dir}")
+        folder_paths.set_output_directory(output_dir)
+
+    # These are the default folders that checkpoints, clip and vae models will be saved to when using CheckpointSave, etc.. nodes
+    folder_paths.add_model_folder_path("checkpoints", os.path.join(folder_paths.get_output_directory(), "checkpoints"))
+    folder_paths.add_model_folder_path("clip", os.path.join(folder_paths.get_output_directory(), "clip"))
+    folder_paths.add_model_folder_path("vae", os.path.join(folder_paths.get_output_directory(), "vae"))
+    folder_paths.add_model_folder_path("diffusion_models",
+                                       os.path.join(folder_paths.get_output_directory(), "diffusion_models"))
+    folder_paths.add_model_folder_path("loras", os.path.join(folder_paths.get_output_directory(), "loras"))
+
+    if args.input_directory:
+        input_dir = os.path.abspath(args.input_directory)
+        logging.info(f"Setting input directory to: {input_dir}")
+        folder_paths.set_input_directory(input_dir)
+
+    if args.user_directory:
+        user_dir = os.path.abspath(args.user_directory)
+        logging.info(f"Setting user directory to: {user_dir}")
+        folder_paths.set_user_directory(user_dir)
+    
+    if args.temp_directory:
+        temp_dir = os.path.join(os.path.abspath(args.temp_directory), "temp")
+        logging.info(f"Setting temp directory to: {temp_dir}")
+        folder_paths.set_temp_directory(temp_dir)
 
 def execute_prestartup_script():
     """Execute any prestartup scripts"""
-    pass
+    import folder_paths
+    import importlib.util
+    from comfy.cli_args import args
+    
+    if args.disable_all_custom_nodes and len(args.whitelist_custom_nodes) == 0:
+        return
+
+    def execute_script(script_path):
+        module_name = os.path.splitext(script_path)[0]
+        try:
+            spec = importlib.util.spec_from_file_location(module_name, script_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return True
+        except Exception as e:
+            logging.error(f"Failed to execute startup-script: {script_path} / {e}")
+        return False
+
+    node_paths = folder_paths.get_folder_paths("custom_nodes")
+    for custom_node_path in node_paths:
+        possible_modules = os.listdir(custom_node_path)
+        node_prestartup_times = []
+
+        for possible_module in possible_modules:
+            module_path = os.path.join(custom_node_path, possible_module)
+            if os.path.isfile(module_path) or module_path.endswith(".disabled") or module_path == "__pycache__":
+                continue
+
+            script_path = os.path.join(module_path, "prestartup_script.py")
+            if os.path.exists(script_path):
+                if args.disable_all_custom_nodes and possible_module not in args.whitelist_custom_nodes:
+                    logging.info(f"Prestartup Skipping {possible_module} due to disable_all_custom_nodes and whitelist_custom_nodes")
+                    continue
+                time_before = time.perf_counter()
+                success = execute_script(script_path)
+                node_prestartup_times.append((time.perf_counter() - time_before, module_path, success))
+    if len(node_prestartup_times) > 0:
+        logging.info("\nPrestartup times for custom nodes:")
+        for n in sorted(node_prestartup_times):
+            if n[2]:
+                import_message = ""
+            else:
+                import_message = " (PRESTARTUP FAILED)"
+            logging.info("{:6.1f} seconds{}: {}".format(n[0], import_message, n[1]))
+        logging.info("")
+
+def cleanup_temp():
+    """Clean up temporary directory"""
+    import folder_paths
+    import shutil
+    temp_dir = folder_paths.get_temp_directory()
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 async def start_comfyui_core(asyncio_loop=None, args=None):
     """Start ComfyUI Core - minimal runtime without built-in nodes"""
+    import folder_paths
     
-    # Apply custom paths
+    # Apply custom paths (includes temp directory setup)
     apply_custom_paths()
+    
+    # Clean up temp directory
+    cleanup_temp()
     
     # Execute prestartup script
     execute_prestartup_script()
+    
+    # Ensure temp directory exists
+    os.makedirs(folder_paths.get_temp_directory(), exist_ok=True)
     
     # Import core modules
     import nodes
@@ -52,7 +153,7 @@ async def start_comfyui_core(asyncio_loop=None, args=None):
     # Use provided args or defaults
     listen_addr = args.listen if args else "127.0.0.1"
     port = args.port if args else 8188
-    verbose = args.verbose if args else False
+    verbose = (args.verbose == 'DEBUG') if args else False
     
     await server_instance.start(listen_addr, port, verbose=verbose)
     
@@ -70,15 +171,24 @@ async def start_comfyui_core(asyncio_loop=None, args=None):
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description='ComfyUI Core - Minimal Runtime')
-    parser.add_argument('--listen', type=str, default="127.0.0.1", metavar="IP", nargs="?", const="0.0.0.0", help="Specify the IP address to listen on (default: 127.0.0.1). If --listen is provided without an argument, it defaults to 0.0.0.0. (listens on all)")
-    parser.add_argument('--port', type=int, default=8188, help="Set the listen port.")
-    parser.add_argument('--verbose', action='store_true', help="Enables more debug prints.")
+    # Enable argument parsing and use the global args from comfy.cli_args
+    import comfy.options
+    comfy.options.enable_args_parsing()
+    from comfy.cli_args import args
     
-    args = parser.parse_args()
-    
-    if args.verbose:
+    # Setup logging based on args
+    if args.verbose == 'DEBUG':
         logging.basicConfig(level=logging.DEBUG)
+    elif args.verbose == 'INFO':
+        logging.basicConfig(level=logging.INFO)
+    elif args.verbose == 'WARNING':
+        logging.basicConfig(level=logging.WARNING)
+    elif args.verbose == 'ERROR':
+        logging.basicConfig(level=logging.ERROR)
+    elif args.verbose == 'CRITICAL':
+        logging.basicConfig(level=logging.CRITICAL)
+    else:
+        logging.basicConfig(level=logging.INFO)
     
     print("=" * 50)
     print("ComfyUI-Core: Minimal Runtime Starting...")
