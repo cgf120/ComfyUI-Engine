@@ -16,8 +16,6 @@
       />
       <SidebarTemplatesButton />
       <div class="side-tool-bar-end">
-        <SidebarLogoutIcon v-if="userStore.isMultiUserServer" />
-        <SidebarHelpCenterIcon />
         <SidebarBottomPanelToggleButton />
         <SidebarShortcutsToggleButton />
       </div>
@@ -37,6 +35,7 @@ import { computed } from 'vue'
 import ExtensionSlot from '@/components/common/ExtensionSlot.vue'
 import SidebarBottomPanelToggleButton from '@/components/sidebar/SidebarBottomPanelToggleButton.vue'
 import SidebarShortcutsToggleButton from '@/components/sidebar/SidebarShortcutsToggleButton.vue'
+import SidebarTemplatesButton from '@/components/sidebar/SidebarTemplatesButton.vue'
 import { useKeybindingStore } from '@/stores/keybindingStore'
 import { useSettingStore } from '@/stores/settingStore'
 import { useWorkspaceStore } from '@/stores/workspaceStore'
@@ -46,7 +45,6 @@ import SidebarIcon from './SidebarIcon.vue'
 
 const workspaceStore = useWorkspaceStore()
 const settingStore = useSettingStore()
-const userStore = useUserStore()
 
 const teleportTarget = computed(() =>
   settingStore.get('Comfy.Sidebar.Location') === 'left'
