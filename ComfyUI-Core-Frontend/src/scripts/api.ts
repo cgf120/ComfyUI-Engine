@@ -133,7 +133,7 @@ interface BackendApiCalls {
 }
 
 /** Dictionary of all api calls */
-interface ApiCalls extends BackendApiCalls, FrontendApiCalls {}
+interface ApiCalls extends BackendApiCalls, FrontendApiCalls { }
 
 /** Used to create a discriminating union on type value. */
 interface ApiMessage<T extends keyof ApiCalls> {
@@ -141,7 +141,7 @@ interface ApiMessage<T extends keyof ApiCalls> {
   data: ApiCalls[T]
 }
 
-export class UnauthorizedError extends Error {}
+export class UnauthorizedError extends Error { }
 
 /** Ensures workers get a fair shake. */
 type Unionize<T> = T[keyof T]
@@ -167,10 +167,10 @@ type AsCustomEvents<T> = {
 /** Handles differing event and API signatures. */
 type ApiToEventType<T = ApiCalls> = {
   [K in keyof T]: K extends 'status'
-    ? StatusWsMessageStatus
-    : K extends 'executing'
-      ? NodeId
-      : T[K]
+  ? StatusWsMessageStatus
+  : K extends 'executing'
+  ? NodeId
+  : T[K]
 }
 
 /** Dictionary of types used in the detail for a custom event */
@@ -907,7 +907,13 @@ export class ComfyApi extends EventTarget {
    * Gets a user data file for the current user
    */
   async getUserData(file: string, options?: RequestInit) {
-    return this.fetchApi(`/userdata/${encodeURIComponent(file)}`, options)
+    try {
+      return await this.fetchApi(`/userdata/${encodeURIComponent(file)}`, options)
+    } catch (error) {
+      console.debug(`UserData API not available for file '${file}'`)
+      // Return a 404 response to maintain compatibility
+      return new Response(null, { status: 404, statusText: 'Not Found' })
+    }
   }
 
   /**
@@ -926,27 +932,35 @@ export class ComfyApi extends EventTarget {
       throwOnError?: boolean
       full_info?: boolean
     } = {
-      overwrite: true,
-      stringify: true,
-      throwOnError: true,
-      full_info: false
-    }
-  ): Promise<Response> {
-    const resp = await this.fetchApi(
-      `/userdata/${encodeURIComponent(file)}?overwrite=${options.overwrite}&full_info=${options.full_info}`,
-      {
-        method: 'POST',
-        body: options?.stringify ? JSON.stringify(data) : data,
-        ...options
+        overwrite: true,
+        stringify: true,
+        throwOnError: true,
+        full_info: false
       }
-    )
-    if (resp.status !== 200 && options.throwOnError !== false) {
-      throw new Error(
-        `Error storing user data file '${file}': ${resp.status} ${(await resp).statusText}`
+  ): Promise<Response> {
+    try {
+      const resp = await this.fetchApi(
+        `/userdata/${encodeURIComponent(file)}?overwrite=${options.overwrite}&full_info=${options.full_info}`,
+        {
+          method: 'POST',
+          body: options?.stringify ? JSON.stringify(data) : data,
+          ...options
+        }
       )
-    }
+      if (resp.status !== 200 && options.throwOnError !== false) {
+        throw new Error(
+          `Error storing user data file '${file}': ${resp.status} ${(await resp).statusText}`
+        )
+      }
 
-    return resp
+      return resp
+    } catch (error) {
+      console.debug(`UserData API not available for storing file '${file}'`)
+      if (options.throwOnError !== false) {
+        throw new Error(`UserData API not available`)
+      }
+      return new Response(null, { status: 404, statusText: 'Not Found' })
+    }
   }
 
   /**
@@ -954,10 +968,15 @@ export class ComfyApi extends EventTarget {
    * @param { string } file The name of the userdata file to delete
    */
   async deleteUserData(file: string) {
-    const resp = await this.fetchApi(`/userdata/${encodeURIComponent(file)}`, {
-      method: 'DELETE'
-    })
-    return resp
+    try {
+      const resp = await this.fetchApi(`/userdata/${encodeURIComponent(file)}`, {
+        method: 'DELETE'
+      })
+      return resp
+    } catch (error) {
+      console.debug(`UserData API not available for deleting file '${file}'`)
+      return new Response(null, { status: 404, statusText: 'Not Found' })
+    }
   }
 
   /**
@@ -970,26 +989,38 @@ export class ComfyApi extends EventTarget {
     dest: string,
     options = { overwrite: false }
   ) {
-    const resp = await this.fetchApi(
-      `/userdata/${encodeURIComponent(source)}/move/${encodeURIComponent(dest)}?overwrite=${options?.overwrite}`,
-      {
-        method: 'POST'
-      }
-    )
-    return resp
+    try {
+      const resp = await this.fetchApi(
+        `/userdata/${encodeURIComponent(source)}/move/${encodeURIComponent(dest)}?overwrite=${options?.overwrite}`,
+        {
+          method: 'POST'
+        }
+      )
+      return resp
+    } catch (error) {
+      console.debug(`UserData API not available for moving file '${source}' to '${dest}'`)
+      return new Response(null, { status: 404, statusText: 'Not Found' })
+    }
   }
 
   async listUserDataFullInfo(dir: string): Promise<UserDataFullInfo[]> {
-    const resp = await this.fetchApi(
-      `/userdata?dir=${encodeURIComponent(dir)}&recurse=true&split=false&full_info=true`
-    )
-    if (resp.status === 404) return []
-    if (resp.status !== 200) {
-      throw new Error(
-        `Error getting user data list '${dir}': ${resp.status} ${resp.statusText}`
+    try {
+      const resp = await this.fetchApi(
+        `/userdata?dir=${encodeURIComponent(dir)}&recurse=true&split=false&full_info=true`
       )
+      if (resp.status === 404) return []
+      if (resp.status !== 200) {
+        throw new Error(
+          `Error getting user data list '${dir}': ${resp.status} ${resp.statusText}`
+        )
+      }
+      return resp.json()
+    } catch (error) {
+      // If userdata API is not available (e.g., in core frontend without user support),
+      // return empty array to avoid console errors
+      console.debug(`UserData API not available for directory '${dir}', returning empty list`)
+      return []
     }
-    return resp.json()
   }
 
   async getLogs(): Promise<string> {

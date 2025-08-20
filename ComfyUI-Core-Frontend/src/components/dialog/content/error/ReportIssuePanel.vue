@@ -27,7 +27,7 @@
           <FormField
             v-slot="$field"
             name="contactInfo"
-            :initial-value="authStore.currentUser?.email"
+            :initial-value="''"
           >
             <div class="self-stretch inline-flex justify-start items-center">
               <label for="contactInfo" class="pb-2 pt-0 opacity-80">{{
@@ -202,7 +202,8 @@ const { defaultFields = ['Workflow', 'Logs', 'SystemStats', 'Settings'] } =
 
 const { t } = useI18n()
 const toast = useToast()
-const authStore = useFirebaseAuthStore()
+// Firebase auth removed in core frontend
+// const authStore = useFirebaseAuthStore()
 
 const selection = ref<string[]>([])
 const contactPrefs = ref<string[]>([])

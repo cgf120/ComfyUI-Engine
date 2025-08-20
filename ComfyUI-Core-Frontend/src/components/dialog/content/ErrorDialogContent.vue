@@ -26,6 +26,8 @@
         :label="$t('issueReport.helpFix')"
         @click="showSendReport"
       />
+      <!-- Contact support button removed in core frontend (requires Firebase auth) -->
+      <!--
       <Button
         v-if="authStore.currentUser"
         v-show="!reportOpen"
@@ -33,6 +35,7 @@
         :label="$t('issueReport.contactSupportTitle')"
         @click="showContactSupport"
       />
+      -->
     </div>
     <template v-if="reportOpen">
       <Divider />
@@ -90,7 +93,8 @@ import {
 
 import ReportIssuePanel from './error/ReportIssuePanel.vue'
 
-const authStore = useFirebaseAuthStore()
+// Firebase auth removed in core frontend
+// const authStore = useFirebaseAuthStore()
 
 const { error } = defineProps<{
   error: Omit<ErrorReportData, 'workflow' | 'systemStats' | 'serverLogs'> & {
