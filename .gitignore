@@ -13,7 +13,9 @@ __pycache__/
 */custom_nodes/
 ComfyUI-Core/input/*
 ComfyUI-Core/output/*
-
+ComfyUI-Core/user/*
+ComfyUI-Core/temp/*
+ComfyUI-Core/models/*
 # Distribution / packaging
 .Python
 build/

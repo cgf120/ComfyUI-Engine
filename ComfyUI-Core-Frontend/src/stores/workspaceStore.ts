@@ -46,23 +46,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const dialog = useDialogService()
   const bottomPanel = useBottomPanelStore()
 
-  // 认证相关的兼容性垫片
-  const authStore = {
-    currentUser: null,
-    isAuthenticated: false
-  }
-  const apiKeyStore = {
-    isAuthenticated: false
-  }
 
-  const firebaseUser = computed(() => authStore.currentUser)
-  const isApiKeyLogin = computed(() => apiKeyStore.isAuthenticated)
-  const isLoggedIn = computed(
-    () => !!isApiKeyLogin.value || firebaseUser.value !== null
-  )
-  const partialUserStore = {
-    isLoggedIn
-  }
 
   /**
    * Registers a sidebar tab.
@@ -107,7 +91,6 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     colorPalette,
     dialog,
     bottomPanel,
-    user: partialUserStore,
 
     registerSidebarTab,
     unregisterSidebarTab,

@@ -40,7 +40,6 @@
           :value="category.label ?? ''"
         >
           <template #header>
-            <CurrentUserMessage v-if="tabValue === 'Comfy'" />
             <FirstTimeUIMessage v-if="tabValue === 'Comfy'" />
             <ColorPaletteMessage v-if="tabValue === 'Appearance'" />
           </template>
@@ -84,8 +83,6 @@ const { defaultPanel } = defineProps<{
     | 'keybinding'
     | 'extension'
     | 'server-config'
-    | 'user'
-    | 'credits'
 }>()
 
 const {
@@ -105,7 +102,7 @@ const {
   getSearchResults
 } = useSettingSearch()
 
-const authActions = useFirebaseAuthActions()
+
 
 // Sort groups for a category
 const sortedGroups = (category: SettingTreeNode): ISettingGroup[] => {
@@ -136,9 +133,6 @@ const tabValue = computed<string>(() =>
 watch(activeCategory, (_, oldValue) => {
   if (!tabValue.value) {
     activeCategory.value = oldValue
-  }
-  if (activeCategory.value?.key === 'credits') {
-    void authActions.fetchBalance()
   }
 })
 </script>

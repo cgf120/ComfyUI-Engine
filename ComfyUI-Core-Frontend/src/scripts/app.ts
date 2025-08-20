@@ -177,7 +177,7 @@ export class ComfyApp {
   menu: ComfyAppMenu
   bypassBgColor: string
   // Set by Comfy.Clipspace extension
-  openClipspace: () => void = () => {}
+  openClipspace: () => void = () => { }
 
   #positionConversion?: {
     clientPosToCanvasPos: (pos: Vector2) => Vector2
@@ -702,24 +702,8 @@ export class ComfyApp {
     })
 
     api.addEventListener('execution_error', ({ detail }) => {
-      // Check if this is an auth-related error or credits-related error
-      if (
-        detail.exception_message?.includes(
-          'Unauthorized: Please login first to use this node.'
-        )
-      ) {
-        useDialogService().showApiNodesSignInDialog([detail.node_type])
-      } else if (
-        detail.exception_message?.includes(
-          'Payment Required: Please add credits to your account to use this node.'
-        )
-      ) {
-        useDialogService().showTopUpCreditsDialog({
-          isInsufficientCredits: true
-        })
-      } else {
-        useDialogService().showExecutionErrorDialog(detail)
-      }
+      // Show execution error dialog
+      useDialogService().showExecutionErrorDialog(detail)
       this.canvas.draw(true, true)
     })
 
@@ -1301,8 +1285,7 @@ export class ComfyApp {
     const executionStore = useExecutionStore()
     executionStore.lastNodeErrors = null
 
-    let comfyOrgAuthToken = undefined
-    let comfyOrgApiKey = undefined
+
 
     try {
       while (this.#queueItems.length) {
@@ -1318,13 +1301,11 @@ export class ComfyApp {
 
           const p = await this.graphToPrompt(this.graph)
           try {
-            api.authToken = comfyOrgAuthToken
-            api.apiKey = comfyOrgApiKey ?? undefined
+
             const res = await api.queuePrompt(number, p, {
               partialExecutionTargets: queueNodeIds
             })
-            delete api.authToken
-            delete api.apiKey
+
             executionStore.lastNodeErrors = res.node_errors ?? null
             if (executionStore.lastNodeErrors?.length) {
               this.canvas.draw(true, true)
@@ -1338,7 +1319,7 @@ export class ComfyApp {
                       .activeWorkflow as ComfyWorkflow
                   })
                 }
-              } catch (error) {}
+              } catch (error) { }
             }
           } catch (error: unknown) {
             useDialogService().showErrorDialog(error, {
@@ -1610,7 +1591,7 @@ export class ComfyApp {
                 // @ts-expect-error fixme ts strict error
                 toSlot = node.inputs?.length - 1
               }
-            } catch (error) {}
+            } catch (error) { }
           }
           if (toSlot != null || toSlot !== -1) {
             // @ts-expect-error fixme ts strict error
@@ -1648,7 +1629,7 @@ export class ComfyApp {
                 // @ts-expect-error fixme ts strict error
                 toSlot = node.inputs?.length - 1
               }
-            } catch (error) {}
+            } catch (error) { }
           }
           if (toSlot != null || toSlot !== -1) {
             // @ts-expect-error fixme ts strict error

@@ -728,24 +728,6 @@ export function useCoreCommands(): ComfyCommand[] {
       }
     },
     {
-      id: 'Comfy.User.OpenSignInDialog',
-      icon: 'pi pi-user',
-      label: 'Open Sign In Dialog',
-      versionAdded: '1.17.6',
-      function: async () => {
-        await dialogService.showSignInDialog()
-      }
-    },
-    {
-      id: 'Comfy.User.SignOut',
-      icon: 'pi pi-sign-out',
-      label: 'Sign Out',
-      versionAdded: '1.18.1',
-      function: async () => {
-        // Sign out functionality removed
-      }
-    },
-    {
       id: 'Comfy.Canvas.MoveSelectedNodes.Up',
       icon: 'pi pi-arrow-up',
       label: 'Move Selected Nodes Up',

@@ -24,11 +24,8 @@ export function useSettingUI(
     | 'keybinding'
     | 'extension'
     | 'server-config'
-    | 'user'
-    | 'credits'
 ) {
   const { t } = useI18n()
-  const isLoggedIn = false
   const settingStore = useSettingStore()
   const activeCategory = ref<SettingTreeNode | null>(null)
 
@@ -134,12 +131,6 @@ export function useSettingUI(
   })
 
   const groupedMenuTreeNodes = computed<SettingTreeNode[]>(() => [
-    // Account settings - only show credits when user is authenticated
-    {
-      key: 'account',
-      label: 'Account',
-      children: [].map(translateCategory)
-    },
     // Normal settings stored in the settingStore
     {
       key: 'settings',

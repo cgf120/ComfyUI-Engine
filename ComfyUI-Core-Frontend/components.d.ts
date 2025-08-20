@@ -37,6 +37,7 @@ declare module 'vue' {
     ContentDivider: typeof import('./src/components/common/ContentDivider.vue')['default']
     ConvertToSubgraphButton: typeof import('./src/components/graph/selectionToolbox/ConvertToSubgraphButton.vue')['default']
     CopyButton: typeof import('./src/components/graph/widgets/chatHistory/CopyButton.vue')['default']
+    CurrentUserMessage: typeof import('./src/components/dialog/content/setting/CurrentUserMessage.vue')['default']
     CustomFormValue: typeof import('./src/components/common/CustomFormValue.vue')['default']
     CustomizationDialog: typeof import('./src/components/common/CustomizationDialog.vue')['default']
     DeleteButton: typeof import('./src/components/graph/selectionToolbox/DeleteButton.vue')['default']

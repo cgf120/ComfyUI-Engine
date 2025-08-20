@@ -26,6 +26,75 @@ except ImportError:
     class MockFolderPaths:
         @staticmethod
         def get_filename_list(folder_type):
+            """Get list of files in the specified folder type"""
+            # Get the ComfyUI-Core base directory (two levels up from this file)
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            models_path = os.path.join(base_path, "models")
+            
+            folder_map = {
+                "checkpoints": "checkpoints",
+                "vae": "vae", 
+                "loras": "loras",
+                "clip": "clip"
+            }
+            
+            if folder_type not in folder_map:
+                return []
+            
+            folder_path = os.path.join(models_path, folder_map[folder_type])
+            if not os.path.exists(folder_path):
+                return []
+            
+            # Supported extensions (matching ComfyUI's supported_pt_extensions)
+            supported_extensions = {'.ckpt', '.pt', '.pt2', '.bin', '.pth', '.safetensors', '.pkl', '.sft'}
+            
+            files = []
+            for file in os.listdir(folder_path):
+                if os.path.splitext(file)[-1].lower() in supported_extensions:
+                    files.append(file)
+            
+            return sorted(files)
+        
+        @staticmethod
+        def get_full_path(folder_type, filename):
+            """Get full path to a model file"""
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            models_path = os.path.join(base_path, "models")
+            
+            folder_map = {
+                "checkpoints": "checkpoints",
+                "vae": "vae",
+                "loras": "loras", 
+                "clip": "clip"
+            }
+            
+            if folder_type not in folder_map:
+                return None
+            
+            full_path = os.path.join(models_path, folder_map[folder_type], filename)
+            if os.path.isfile(full_path):
+                return full_path
+            return None
+        
+        @staticmethod
+        def get_full_path_or_raise(folder_type, filename):
+            """Get full path or raise FileNotFoundError (matching ComfyUI's API)"""
+            full_path = MockFolderPaths.get_full_path(folder_type, filename)
+            if full_path is None:
+                raise FileNotFoundError(f"Model in folder '{folder_type}' with filename '{filename}' not found.")
+            return full_path
+        
+        @staticmethod
+        def get_folder_paths(folder_type):
+            """Get folder paths for embeddings etc"""
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            models_path = os.path.join(base_path, "models")
+            
+            if folder_type == "embeddings":
+                embeddings_path = os.path.join(models_path, "embeddings")
+                if os.path.exists(embeddings_path):
+                    return [embeddings_path]
+            
             return []
     
     comfy = MockComfy()
@@ -47,14 +116,9 @@ class CheckpointLoaderSimple:
     FUNCTION = "load_checkpoint"
     CATEGORY = "loaders"
 
-    def load_checkpoint(self, ckpt_name, output_vae=True, output_clip=True):
-        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
-        out = comfy.sd.load_checkpoint_guess_config(
-            ckpt_path, 
-            output_vae=output_vae, 
-            output_clip=output_clip, 
-            embedding_directory=folder_paths.get_folder_paths("embeddings")
-        )
+    def load_checkpoint(self, ckpt_name):
+        ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
+        out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, embedding_directory=folder_paths.get_folder_paths("embeddings"))
         return out[:3]
 
 
