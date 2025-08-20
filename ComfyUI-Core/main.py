@@ -277,9 +277,9 @@ async def start_comfyui_core(asyncio_loop=None, args=None):
     await server_instance.setup()
     
     # Use provided args or defaults
-    listen_addr = args.listen if args else "127.0.0.1"
-    port = args.port if args else 8188
-    verbose = (args.verbose != 'ERROR') if args else True
+    listen_addr = args.listen if args and hasattr(args, 'listen') else "127.0.0.1"
+    port = args.port if args and hasattr(args, 'port') else 8188
+    verbose = (args.verbose != 'ERROR') if args and hasattr(args, 'verbose') else True
     
     # Start server and publish loop concurrently
     async def run_server():

@@ -8,6 +8,7 @@ import sys
 import importlib
 import logging
 from typing import Dict, Any
+import comfy.model_management
 
 # Empty node mappings - all nodes loaded via custom_nodes
 NODE_CLASS_MAPPINGS: Dict[str, Any] = {}
@@ -110,6 +111,14 @@ def get_object_info():
             logging.error(f"Error getting info for node {x}: {e}")
     
     return out
+
+def before_node_execution():
+    """Called before node execution - for interrupt checking"""
+    comfy.model_management.throw_exception_if_processing_interrupted()
+
+def interrupt_processing(value=True):
+    """Interrupt processing - compatible with ComfyUI"""
+    comfy.model_management.interrupt_current_processing(value)
 
 # Initialize with empty mappings
 print("ComfyUI-Core nodes.py: Initialized with empty node registry")
