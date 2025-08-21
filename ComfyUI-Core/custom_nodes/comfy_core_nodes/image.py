@@ -11,38 +11,10 @@ import torch
 from PIL import Image, ImageOps, ImageSequence
 from PIL.PngImagePlugin import PngInfo
 
-try:
-    import folder_paths
-    import comfy.utils
-    from comfy.cli_args import args
-except ImportError:
-    print("Warning: ComfyUI image modules not found. Creating stubs.")
-    
-    # Create a mock args object
-    class MockArgs:
-        disable_metadata = False
-    args = MockArgs()
-    
-    class MockFolderPaths:
-        @staticmethod
-        def get_output_directory():
-            return "./output"
-        
-        @staticmethod
-        def get_input_directory():
-            return "./input"
-        
-        @staticmethod
-        def get_annotated_filepath(filename):
-            return filename, None
-    
-    class MockUtils:
-        @staticmethod
-        def common_upscale(*args, **kwargs):
-            return None
-    
-    folder_paths = MockFolderPaths()
-    comfy = type('MockComfy', (), {'utils': MockUtils()})()
+# 导入真实的ComfyUI模块
+import folder_paths
+import comfy.utils
+from comfy.cli_args import args
 
 
 class LoadImage:
@@ -52,6 +24,7 @@ class LoadImage:
     def INPUT_TYPES(s):
         input_dir = folder_paths.get_input_directory()
         files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        files = folder_paths.filter_files_content_types(files, ["image"])
         return {
             "required": {
                 "image": (sorted(files), {"image_upload": True})
@@ -87,8 +60,11 @@ class LoadImage:
             
             image = np.array(image).astype(np.float32) / 255.0
             image = torch.from_numpy(image)[None,]
-            if 'transparency' in i.info:
+            if 'A' in i.getbands():
                 mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                mask = 1. - torch.from_numpy(mask)
+            elif i.mode == 'P' and 'transparency' in i.info:
+                mask = np.array(i.convert('RGBA').getchannel('A')).astype(np.float32) / 255.0
                 mask = 1. - torch.from_numpy(mask)
             else:
                 mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
@@ -195,3 +171,60 @@ class PreviewImage(SaveImage):
                 "extra_pnginfo": "EXTRA_PNGINFO"
             },
         }
+
+
+class LoadImageMask:
+    """Load image mask from file"""
+    
+    _color_channels = ["alpha", "red", "green", "blue"]
+    
+    @classmethod
+    def INPUT_TYPES(s):
+        input_dir = folder_paths.get_input_directory()
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        return {
+            "required": {
+                "image": (sorted(files), {"image_upload": True}),
+                "channel": (s._color_channels, )
+            }
+        }
+
+    CATEGORY = "mask"
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "load_image"
+    
+    def load_image(self, image, channel):
+        image_path = folder_paths.get_annotated_filepath(image)
+        i = Image.open(image_path)
+        i = ImageOps.exif_transpose(i)
+        if i.getbands() != ("R", "G", "B", "A"):
+            if i.mode == 'I':
+                i = i.point(lambda i: i * (1 / 255))
+            i = i.convert("RGBA")
+        
+        mask = None
+        if channel == "alpha":
+            mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+        elif channel == "red":
+            mask = np.array(i.getchannel('R')).astype(np.float32) / 255.0
+        elif channel == "green":
+            mask = np.array(i.getchannel('G')).astype(np.float32) / 255.0
+        elif channel == "blue":
+            mask = np.array(i.getchannel('B')).astype(np.float32) / 255.0
+        
+        mask = 1. - torch.from_numpy(mask)
+        return (mask, )
+
+    @classmethod
+    def IS_CHANGED(s, image):
+        image_path = folder_paths.get_annotated_filepath(image)
+        m = hashlib.sha256()
+        with open(image_path, 'rb') as f:
+            m.update(f.read())
+        return m.digest().hex()
+
+    @classmethod
+    def VALIDATE_INPUTS(s, image):
+        if not folder_paths.exists_annotated_filepath(image):
+            return "Invalid image file: {}".format(image)
+        return True

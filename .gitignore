@@ -10,7 +10,6 @@ __pycache__/
 .kiro
 .DS_Store
 */node_modules/
-*/custom_nodes/
 ComfyUI-Core/input/*
 ComfyUI-Core/output/*
 ComfyUI-Core/user/*
