@@ -121,3 +121,46 @@ class CLIPLoader:
         clip_path = folder_paths.get_full_path("clip", clip_name)
         clip = comfy.sd.load_clip(ckpt_paths=[clip_path], embedding_directory=folder_paths.get_folder_paths("embeddings"))
         return (clip,)
+
+
+class DiffusersLoader:
+    @classmethod
+    def INPUT_TYPES(cls):
+        paths = []
+        for search_path in folder_paths.get_folder_paths("diffusers"):
+            if os.path.exists(search_path):
+                for root, subdir, files in os.walk(search_path, followlinks=True):
+                    if "model_index.json" in files:
+                        paths.append(os.path.relpath(root, start=search_path))
+
+        return {"required": {"model_path": (paths,), }}
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE")
+    FUNCTION = "load_checkpoint"
+
+    CATEGORY = "advanced/loaders/deprecated"
+
+    def load_checkpoint(self, model_path, output_vae=True, output_clip=True):
+        for search_path in folder_paths.get_folder_paths("diffusers"):
+            if os.path.exists(search_path):
+                path = os.path.join(search_path, model_path)
+                if os.path.exists(path):
+                    model_path = path
+                    break
+
+        return comfy.diffusers_load.load_diffusers(model_path, output_vae=output_vae, output_clip=output_clip, embedding_directory=folder_paths.get_folder_paths("embeddings"))
+
+
+class unCLIPCheckpointLoader:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
+                             }}
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "CLIP_VISION")
+    FUNCTION = "load_checkpoint"
+
+    CATEGORY = "loaders"
+
+    def load_checkpoint(self, ckpt_name, output_vae=True, output_clip=True):
+        ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
+        out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, output_clipvision=True, embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        return out

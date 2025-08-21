@@ -24,20 +24,6 @@ class KSampler:
                      "latent_image": ("LATENT", ),
                      "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                      "model": ("MODEL", ),
-                     "positive_2": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "negative_2": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "positive_3": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "negative_3": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "positive_4": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "negative_4": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "positive_5": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "negative_5": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "positive_6": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "negative_6": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "positive_7": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "negative_7": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "positive_8": ("CONDITIONING", {"default": None, "forceInput": False}),
-                     "negative_8": ("CONDITIONING", {"default": None, "forceInput": False}),
                      "add_noise": ("BOOLEAN", {"default": True}),
                      "start_at_step": ("INT", {"default": 0, "min": 0, "max": 10000}),
                      "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
@@ -73,13 +59,34 @@ class KSampler:
             for neg in negative_conditionings[1:]:
                 negative = negative + neg
         
-        # Create sampler
-        sampler = comfy.samplers.KSampler(model, steps=steps, device=comfy.model_management.get_torch_device(), sampler=sampler_name, scheduler=scheduler, denoise=denoise, model_options={"transformer_options": {"cond_overrides": None}})
+        # Extract latent samples
+        latent_samples = latent_image["samples"]
+        latent_samples = comfy.sample.fix_empty_latent_channels(model, latent_samples)
         
-        # Sample
-        samples = sampler.sample(model, seed, positive, negative, latent_image, denoise=denoise, add_noise=add_noise, start_at_step=start_at_step, end_at_step=end_at_step, return_with_leftover_noise=return_with_leftover_noise)
+        # Prepare noise
+        if add_noise:
+            batch_inds = latent_image.get("batch_index", None)
+            noise = comfy.sample.prepare_noise(latent_samples, seed, batch_inds)
+        else:
+            noise = torch.zeros(latent_samples.size(), dtype=latent_samples.dtype, layout=latent_samples.layout, device="cpu")
         
-        return (samples, )
+        # Get noise mask if available
+        noise_mask = latent_image.get("noise_mask", None)
+        
+        # Sample using comfy.sample.sample
+        samples = comfy.sample.sample(
+            model, noise, steps, cfg, sampler_name, scheduler, 
+            positive, negative, latent_samples, 
+            denoise=denoise, disable_noise=not add_noise, 
+            start_step=start_at_step, last_step=end_at_step, 
+            force_full_denoise=not return_with_leftover_noise, 
+            noise_mask=noise_mask, seed=seed
+        )
+        
+        # Return in latent format
+        out = latent_image.copy()
+        out["samples"] = samples
+        return (out, )
 
 
 class KSamplerAdvanced:
@@ -113,20 +120,42 @@ class KSamplerAdvanced:
     CATEGORY = "sampling"
 
     def sample(self, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, model, add_noise=True, start_at_step=0, end_at_step=10000, return_with_leftover_noise=False, preview_method="auto", vae_decode=True, vae=None):
-        # Create sampler
-        sampler = comfy.samplers.KSampler(model, steps=steps, device=comfy.model_management.get_torch_device(), sampler=sampler_name, scheduler=scheduler, denoise=denoise, model_options={"transformer_options": {"cond_overrides": None}})
+        # Extract latent samples
+        latent_samples = latent_image["samples"]
+        latent_samples = comfy.sample.fix_empty_latent_channels(model, latent_samples)
         
-        # Sample
-        samples = sampler.sample(model, seed, positive, negative, latent_image, denoise=denoise, add_noise=add_noise, start_at_step=start_at_step, end_at_step=end_at_step, return_with_leftover_noise=return_with_leftover_noise)
+        # Prepare noise
+        if add_noise:
+            batch_inds = latent_image.get("batch_index", None)
+            noise = comfy.sample.prepare_noise(latent_samples, seed, batch_inds)
+        else:
+            noise = torch.zeros(latent_samples.size(), dtype=latent_samples.dtype, layout=latent_samples.layout, device="cpu")
+        
+        # Get noise mask if available
+        noise_mask = latent_image.get("noise_mask", None)
+        
+        # Sample using comfy.sample.sample
+        samples = comfy.sample.sample(
+            model, noise, steps, cfg, sampler_name, scheduler, 
+            positive, negative, latent_samples, 
+            denoise=denoise, disable_noise=not add_noise, 
+            start_step=start_at_step, last_step=end_at_step, 
+            force_full_denoise=not return_with_leftover_noise, 
+            noise_mask=noise_mask, seed=seed
+        )
+        
+        # Return in latent format
+        out = latent_image.copy()
+        out["samples"] = samples
         
         # Preview image
         preview_image = None
         if vae_decode and vae is not None:
-            preview_image = vae.decode(samples["samples"])
+            preview_image = vae.decode(samples)
             if len(preview_image.shape) == 5:  # Combine batches
                 preview_image = preview_image.reshape(-1, preview_image.shape[-3], preview_image.shape[-2], preview_image.shape[-1])
         
-        return (samples, preview_image)
+        return (out, preview_image)
 
 
 class KSamplerWithRefiner:
@@ -158,13 +187,40 @@ class KSamplerWithRefiner:
     CATEGORY = "sampling"
 
     def sample(self, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, model, refiner_strength, refiner_model, refiner_positive, refiner_negative, add_noise=True):
+        # Extract latent samples
+        latent_samples = latent_image["samples"]
+        latent_samples = comfy.sample.fix_empty_latent_channels(model, latent_samples)
+        
+        # Prepare noise for first pass
+        if add_noise:
+            batch_inds = latent_image.get("batch_index", None)
+            noise = comfy.sample.prepare_noise(latent_samples, seed, batch_inds)
+        else:
+            noise = torch.zeros(latent_samples.size(), dtype=latent_samples.dtype, layout=latent_samples.layout, device="cpu")
+        
+        # Get noise mask if available
+        noise_mask = latent_image.get("noise_mask", None)
+        
         # First pass with base model
-        sampler = comfy.samplers.KSampler(model, steps=steps, device=comfy.model_management.get_torch_device(), sampler=sampler_name, scheduler=scheduler, denoise=denoise, model_options={"transformer_options": {"cond_overrides": None}})
-        samples = sampler.sample(model, seed, positive, negative, latent_image, denoise=denoise, add_noise=add_noise)
+        samples = comfy.sample.sample(
+            model, noise, steps, cfg, sampler_name, scheduler, 
+            positive, negative, latent_samples, 
+            denoise=denoise, disable_noise=not add_noise, 
+            noise_mask=noise_mask, seed=seed
+        )
         
         # Second pass with refiner if strength > 0
         if refiner_strength > 0 and refiner_model is not None:
-            refiner_sampler = comfy.samplers.KSampler(refiner_model, steps=steps, device=comfy.model_management.get_torch_device(), sampler=sampler_name, scheduler=scheduler, denoise=refiner_strength, model_options={"transformer_options": {"cond_overrides": None}})
-            samples = refiner_sampler.sample(refiner_model, seed, refiner_positive, refiner_negative, samples, denoise=refiner_strength, add_noise=False)
+            # Use samples from first pass as input for refiner
+            refiner_noise = torch.zeros(samples.size(), dtype=samples.dtype, layout=samples.layout, device="cpu")
+            samples = comfy.sample.sample(
+                refiner_model, refiner_noise, steps, cfg, sampler_name, scheduler, 
+                refiner_positive, refiner_negative, samples, 
+                denoise=refiner_strength, disable_noise=True, 
+                seed=seed
+            )
         
-        return (samples, )
+        # Return in latent format
+        out = latent_image.copy()
+        out["samples"] = samples
+        return (out, )
